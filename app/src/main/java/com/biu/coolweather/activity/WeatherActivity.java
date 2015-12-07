@@ -6,6 +6,7 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.View;
 import android.view.Window;
 import android.widget.Button;
@@ -24,6 +25,7 @@ import com.biu.coolweather.utils.Utility;
  * Desc:CoolWeather:show the weather info.
  */
 public class WeatherActivity extends Activity implements View.OnClickListener {
+    private static final String TAG = "WeatherActivity";
     private LinearLayout weatherInfoLayout;
     //城市名
     private TextView cityNameText;
@@ -42,6 +44,7 @@ public class WeatherActivity extends Activity implements View.OnClickListener {
     //更新天气按钮
     private Button refreshWeather;
 
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -59,6 +62,7 @@ public class WeatherActivity extends Activity implements View.OnClickListener {
         refreshWeather = (Button) findViewById(R.id.refresh_weather);
         String countyCode = getIntent().getStringExtra("county_code");
         if(!TextUtils.isEmpty(countyCode)){
+            Log.e(TAG, countyCode);
             //有县级代号就去查询天气
             publishText.setText("同步中...");
             weatherInfoLayout.setVisibility(View.INVISIBLE);
@@ -95,12 +99,20 @@ public class WeatherActivity extends Activity implements View.OnClickListener {
     }
 
     /**
-     * 查询县级天气
+     * 查询县级代号对应的天气代号
      * @param countyCode
      */
     private void queryWeatherCode(String countyCode){
         String address = "http://www.weather.com.cn/data/list3/city"+countyCode+".xml";
         queryFromServer(address,"countyCode");
+    }
+    /**
+     * 查询天气代号
+     * @param weatherCode
+     */
+    private void queryWeatherInfo(String weatherCode) {
+        String address = "http://www.weather.com.cn/data/cityinfo/"+weatherCode+".html";
+        queryFromServer(address,"weatherCode");
     }
     private void queryFromServer(final String address,final String type){
         HttpUtils.sendHttpRequest(address, new HttpCallbackListener() {
@@ -112,11 +124,13 @@ public class WeatherActivity extends Activity implements View.OnClickListener {
                         String[] array = response.split("\\|");
                         if (array != null && array.length == 2) {
                             String weatherCode = array[1];
+                            Log.e("********Weather******", weatherCode);//060905|101060905
                             queryWeatherInfo(weatherCode);
                         }
                     }
                 } else if ("weatherCode".equals(type)) {
-                    //处理服务器返回的天气信息
+                    //处理服务器返回的天气信息,保存到本地
+                    Log.e("******Wea************",response);
                     Utility.handleWeatherResponse(WeatherActivity.this, response);
                     runOnUiThread(new Runnable() {
                         @Override
@@ -140,7 +154,7 @@ public class WeatherActivity extends Activity implements View.OnClickListener {
     }
 
     /**
-     * 从sp文件中读取天气，显示到界面上
+     * 从本地sp文件中读取天气，显示到界面上
      */
     private void showWeather(){
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
@@ -154,10 +168,4 @@ public class WeatherActivity extends Activity implements View.OnClickListener {
         cityNameText.setVisibility(View.VISIBLE);
     }
 
-    /**
-     * 查询天气信息
-     * @param weatherCode
-     */
-    private void queryWeatherInfo(String weatherCode) {
-    }
 }
