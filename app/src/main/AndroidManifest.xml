@@ -17,6 +17,8 @@
             </intent-filter>
         </activity>
         <activity android:name="com.biu.coolweather.activity.WeatherActivity"/>
+        <receiver android:name="com.biu.coolweather.receiver.AutoUpdateReceiver"/>
+        <service android:name="com.biu.coolweather.service.AutoUpdateService"/>
     </application>
     
 
